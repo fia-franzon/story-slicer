@@ -11,13 +11,16 @@ This repo packages the skill so it can be dropped into a Claude Code or Cowork p
 
 ## Why the project pivot
 
-My original project failed because it was improperly scoped; despite being a PM, I let creep get the best of me and failed to define a concise enough happy path. 
+My original project failed because it was improperly scoped; despite being a PM, I let creep get the best of me and failed to define a concise enough happy path. I'm going to follow core PDLC principles: clear PRD, AC, and milestones.
 
-I also developed on my personal laptop, and didn't create a rich enough environment for the project to be easily understood (even by myself). The project folder got cluttered with references of what the tool could become rather than what it needs to be in V1. Furthermore, visiblity into what the AI was producing started to get foggy. 
+**Organization**: The project folder got cluttered with references of what the tool could become rather than what it needs to be in V1. Furthermore, visiblity into what the AI was producing started to get foggy. Instead of breaking out versions into new documents, I'll be careful to figure out a way to balance keeping records (perhaps new folder structures?) and introducing clutter which ultimately confused the agent.
 
-I'm going to revisit it differently. I'm going to recalibrate a long PRD and be more considerate over phasing. Instead of breaking out versions into new documents, I'll be careful to figure out a way to balance keeping records and introducing clutter which ultimately confused the agent. Lastly, when moving to development, I'm going to keep a jira board of tickets and tackle them one at a time. I noticed that without more granular requirements of what each session had to build there was some struggle to understand what was being made. (i.e. instead of "build this piece x", prompt "build this piece x. this piece x is done when y. Test for y".
+**Development**: Lastly, when moving to development, I'm going to keep a jira board of tickets and tackle them one at a time. I noticed that without more granular requirements of what each session had to build there was some struggle to understand what was being made. (i.e. instead of "build this piece x", prompt "build this piece x. this piece x is done when y. Test for y".
+
+**Testing**: I developed on my personal laptop, and I found the output to not really be applicable to all organizations. My story slicer can actually be used pretty easily by anyone, but this project wasn't as universally applicable, which made testing on my work computer challenging. 
 
 Anyways, a great project overall! Appreciate the sessions jamming and the learning. 
+
 ## What's inside
 
 ```
