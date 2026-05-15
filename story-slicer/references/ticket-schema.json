@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "story-slicer ticket schema",
+  "description": "Schema for parent and child tickets used by the story-slicer skill. Acceptance criteria must be in Given/When/Then form to support test-driven development workflows.",
+  "definitions": {
+    "givenWhenThen": {
+      "type": "string",
+      "description": "An acceptance criterion in the form 'Given <context>, When <action>, Then <outcome>'. Inline (comma-separated) and multi-line forms are both accepted.",
+      "pattern": "^\\s*[Gg]iven\\s+.+[\\s,.\\n]+[Ww]hen\\s+.+[\\s,.\\n]+[Tt]hen\\s+.+$"
+    },
+    "parent": {
+      "type": "object",
+      "required": ["title", "description", "acceptance_criteria"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Tracker key (e.g., 'PROJ-1234'). If omitted, the script generates a content-hash placeholder."
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "acceptance_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/givenWhenThen" }
+        },
+        "labels": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "estimate": {
+          "type": "number",
+          "description": "Story points or similar. Triggers oversized-estimate smell when over the team threshold (default: 8)."
+        },
+        "parent_id": {
+          "type": "string",
+          "description": "The parent's parent — typically an epic key. Children inherit this."
+        }
+      }
+    },
+    "child": {
+      "type": "object",
+      "required": ["title", "description", "acceptance_criteria", "covers"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "acceptance_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/givenWhenThen" }
+        },
+        "covers": {
+          "type": "array",
+          "minItems": 1,
+          "description": "1-based indices into the parent's acceptance_criteria. Every parent index must appear in at least one child.",
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "split_pattern": {
+          "type": "string",
+          "description": "Pattern label from references/split-patterns.md.",
+          "enum": [
+            "Workflow Steps",
+            "Happy path",
+            "Unhappy path",
+            "Data Variations",
+            "CRUD - Create",
+            "CRUD - Read",
+            "CRUD - Update",
+            "CRUD - Delete",
+            "CRUD",
+            "Persona",
+            "Spike",
+            "Build"
+          ]
+        },
+        "labels": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "estimate": { "type": "number" }
+      }
+    },
+    "workingDoc": {
+      "type": "object",
+      "required": ["parent", "children"],
+      "properties": {
+        "parent": { "$ref": "#/definitions/parent" },
+        "children": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/child" }
+        },
+        "open_questions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "One question per item. Each posts as its own comment on the parent."
+        },
+        "alternative_slices": {
+          "type": "array",
+          "description": "Alternatives the model considered but didn't act on. Each posts as its own comment.",
+          "items": {
+            "type": "object",
+            "required": ["label"],
+            "properties": {
+              "label": { "type": "string" },
+              "rationale": { "type": "string" },
+              "sketch": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/definitions/parent" },
+    { "$ref": "#/definitions/workingDoc" }
+  ]
+}
