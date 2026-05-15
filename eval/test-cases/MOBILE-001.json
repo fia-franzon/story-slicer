@@ -1,0 +1,35 @@
+{
+  "id": "MOBILE-001",
+  "title": "Add offline mode to the mobile app with sync, conflict resolution, and retry",
+  "description": "Field users in low-connectivity environments need the app to work offline. Build offline mode: cache the user's data on login, let them perform reads and create/edit/delete actions offline, queue mutations until reconnection, sync queued mutations on reconnect with conflict resolution, retry failed syncs with exponential backoff, show offline state in the UI (banner + per-screen icons), and support background sync via iOS BackgroundTasks and Android WorkManager. Conflict resolution: last-write-wins for most fields, manual resolution UI for structured documents. iOS and Android both.",
+  "acceptance_criteria": [
+    "Given a logged-in user on the mobile app, When they go offline, Then a persistent banner appears, per-screen icons indicate offline state, and the app continues to function for cached data.",
+    "Given a user offline, When they create, edit, or delete a record, Then the change is applied locally and queued for sync.",
+    "Given a user reconnects, When the sync queue runs, Then queued mutations are sent to the server in order, with exponential backoff on failure (1s, 2s, 4s, 8s, max 5 retries).",
+    "Given a sync conflict on a simple field, When the queued mutation arrives, Then last-write-wins is applied and the user sees a non-blocking toast summarizing the resolution.",
+    "Given a sync conflict on a structured document, When the queued mutation arrives, Then both versions are presented in a conflict-resolution UI and the user picks which to keep or merges manually.",
+    "Given the app is backgrounded, When OS allows background work, Then iOS BackgroundTasks and Android WorkManager flush the sync queue without requiring the user to open the app."
+  ],
+  "labels": [
+    "eval",
+    "mobile"
+  ],
+  "_ground_truth": {
+    "label": "SLICE",
+    "domain": "mobile",
+    "expected_verdict": "slice",
+    "expected_smells": [
+      "multi_verb_title",
+      "compound_gwt",
+      "too_many_acs",
+      "sprawling_description",
+      "mixed_crud"
+    ],
+    "expected_children_range": [
+      4,
+      6
+    ],
+    "notes": "Workflow Steps + Happy/Unhappy split very natural. Watch for horizontal platform-split temptation (iOS / Android)."
+  },
+  "_source": "Field-services mobile-app pattern; representative of typical offline-mode PRDs."
+}

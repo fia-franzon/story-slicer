@@ -1,0 +1,38 @@
+{
+  "id": "API-001",
+  "title": "Build public REST API for tasks with full CRUD, search, webhooks, and OAuth",
+  "description": "We're opening up tasks via a public API. Endpoints for list/create/read/update/delete on tasks, plus search with filters and pagination, bulk operations (bulk complete, bulk delete, bulk reassign), webhooks for task.created / task.updated / task.completed / task.deleted events, OAuth 2.0 client-credentials flow, API key management UI (create / revoke / rotate), rate limiting (1000 req/min per key), and a docs site generated from the OpenAPI spec. Developer audience plus admin audience for managing keys. Stripe-style API design.",
+  "acceptance_criteria": [
+    "Given a developer with a valid API key, When they GET /tasks with optional filters, Then they receive a paginated list of tasks scoped to their workspace.",
+    "Given a developer with a valid API key, When they POST /tasks with a valid payload, Then a task is created, the response includes the new task, and a task.created webhook fires to subscribed endpoints.",
+    "Given a developer, When they PATCH /tasks/:id or DELETE /tasks/:id, Then the task is updated or soft-deleted, and the corresponding webhook fires.",
+    "Given a developer making bulk operations, When they POST /tasks/bulk with an action and a list of task IDs, Then the action is applied to all listed tasks and a single webhook batch event fires.",
+    "Given a workspace admin, When they create an API key, Then a key is generated with a 'kxx_' prefix, the user sees the key once for copying, and the key is stored hashed.",
+    "Given a workspace admin, When they revoke or rotate an API key, Then subsequent requests with the revoked key receive 401, and rotated keys invalidate the previous value.",
+    "Given a developer exceeding 1000 requests per minute per key, When the threshold is hit, Then subsequent requests receive 429 with Retry-After headers until the window resets.",
+    "Given a developer subscribing to webhooks, When an event fires, Then a POST is delivered to the subscriber URL with HMAC-signed payload, and failures are retried with exponential backoff up to 24 hours."
+  ],
+  "labels": [
+    "eval",
+    "api"
+  ],
+  "_ground_truth": {
+    "label": "SLICE",
+    "domain": "api",
+    "expected_verdict": "slice",
+    "expected_smells": [
+      "multi_verb_title",
+      "compound_gwt",
+      "too_many_acs",
+      "multiple_personas",
+      "sprawling_description",
+      "mixed_crud"
+    ],
+    "expected_children_range": [
+      5,
+      8
+    ],
+    "notes": "Strong CRUD + Persona signals. Natural slices: CRUD endpoints, webhooks, OAuth/keys, rate limiting, docs."
+  },
+  "_source": "Inspired by Stripe, Linear, GitHub public API PRD patterns."
+}

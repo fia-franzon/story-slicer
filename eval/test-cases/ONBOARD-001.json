@@ -1,0 +1,37 @@
+{
+  "id": "ONBOARD-001",
+  "title": "Build onboarding flow with signup, verification, profile, team invite, and tour",
+  "description": "Activation is poor. Build a guided onboarding flow that runs from signup to first valuable action. Steps: email signup with password, email verification, profile setup (name + role + photo), team invitation (skip if solo), sample data seed for empty workspace, welcome tour highlighting the 5 main features, and a first-task suggestion based on the user's stated role. Should be skippable per step. Should resume from the last completed step if the user drops off. Analytics on every step so we can measure funnel.",
+  "acceptance_criteria": [
+    "Given a new visitor on the landing page, When they submit the signup form with email and password, Then an account is created, a verification email is sent, and they land on the email-verification screen.",
+    "Given a user on the verification screen, When they click the email link, Then their email is verified and they proceed to profile setup.",
+    "Given a user on profile setup, When they enter name, role, and upload a photo, Then their profile is saved and they proceed to team invitation, or can click 'Skip' to bypass.",
+    "Given a user on team invitation, When they enter up to 5 emails and click invite, Then invitation emails are sent and the user proceeds to the sample-data seed step.",
+    "Given a user with an empty workspace, When the sample-data step runs, Then 3 example tasks and 1 example project are created for them automatically.",
+    "Given a user finishing sample-data, When they reach the welcome tour, Then a 5-step coachmark tour runs over the main UI, and the user can dismiss at any time.",
+    "Given a user completing the tour, When the first-task suggestion shows, Then it suggests an action tailored to their stated role and links to that action.",
+    "Given a user who drops off mid-onboarding, When they next sign in, Then they resume from the last incomplete step.",
+    "Given any onboarding step, When the user completes or skips it, Then a Segment event fires (onboarding_step_completed or onboarding_step_skipped) with the step name and timestamp."
+  ],
+  "labels": [
+    "eval",
+    "onboarding"
+  ],
+  "_ground_truth": {
+    "label": "SLICE",
+    "domain": "onboarding",
+    "expected_verdict": "slice",
+    "expected_smells": [
+      "multi_verb_title",
+      "compound_gwt",
+      "too_many_acs",
+      "sprawling_description"
+    ],
+    "expected_children_range": [
+      4,
+      6
+    ],
+    "notes": "Canonical Workflow Steps case. Each step is a candidate child."
+  },
+  "_source": "Common SaaS onboarding template; appears in Notion, Linear, Figma onboarding PRDs."
+}

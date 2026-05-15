@@ -1,0 +1,36 @@
+{
+  "id": "AUTH-001",
+  "title": "Add SSO, 2FA, password reset, and account lockout to login",
+  "description": "We need to harden the login experience. Support SSO via Google, Microsoft, and Okta; add TOTP-based 2FA with backup codes; add a password-reset flow via email magic link; add account lockout after 5 failed attempts with admin unlock; and add a 'Remember me' option that keeps the session alive for 30 days. Should work for end users, SSO-only enterprise users, and support admins who help locked-out users. Security team wants audit logs for every auth event. Marketing wants 'Sign in with Apple' if we can fit it. The login screen is also getting a design refresh — let's update the visuals while we're in there. Accessibility: legal flagged WCAG AA on the new screens.",
+  "acceptance_criteria": [
+    "Given a user on the login page, When they click 'Sign in with Google' or 'Sign in with Microsoft' or 'Sign in with Okta', Then they are redirected to the IdP and on return they are logged in and a session_started audit event is written.",
+    "Given a user with 2FA enabled, When they enter a valid password, Then they are prompted for a TOTP code and on success they are logged in, or on failure they see an error and can retry up to 5 times.",
+    "Given a user who forgot their password, When they request a reset, Then they receive a magic-link email valid for 1 hour, and clicking it lets them set a new password and invalidates all existing sessions.",
+    "Given a user who fails password entry 5 times in a row, When the 5th attempt fails, Then the account is locked for 15 minutes and an admin notification is sent, and the user sees a 'contact support' message.",
+    "Given a support admin viewing a locked account, When they click 'Unlock', Then the account is unlocked, the unlock event is written to the audit log, and the user receives an unlock notification email.",
+    "Given a user generating 2FA backup codes, When they confirm setup, Then 10 single-use backup codes are displayed once and stored hashed, and the user can use any code in place of a TOTP during 2FA.",
+    "Given any user successfully logging in, When 'Remember me' is checked, Then the session persists for 30 days across browser restarts, and a remember_me_session_created audit event is written."
+  ],
+  "labels": [
+    "eval",
+    "auth"
+  ],
+  "_ground_truth": {
+    "label": "SLICE",
+    "domain": "auth",
+    "expected_verdict": "slice",
+    "expected_smells": [
+      "multi_verb_title",
+      "compound_gwt",
+      "too_many_acs",
+      "multiple_personas",
+      "sprawling_description"
+    ],
+    "expected_children_range": [
+      4,
+      7
+    ],
+    "notes": "Multi-verb title, conjunction-heavy When/Then clauses, three personas (user, SSO user, admin), 7 ACs. Mixed CRUD via reset/unlock/create."
+  },
+  "_source": "Composed from Atlassian, Stripe, and GitHub auth backlog patterns; not derived from skill rubric."
+}

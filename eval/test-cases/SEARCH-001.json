@@ -1,0 +1,25 @@
+{
+  "id": "SEARCH-001",
+  "title": "Add a clear-search button to the search bar",
+  "description": "The search bar in the top navigation has no way to clear input without selecting all and deleting. Add a small X icon on the right side of the input that clears the field and re-runs the empty search (showing all results).",
+  "acceptance_criteria": [
+    "Given a user with text in the search bar, When they click the X icon, Then the input is cleared and the search results refresh to show the unfiltered list.",
+    "Given an empty search bar, When the user has not typed anything, Then the X icon is hidden."
+  ],
+  "labels": [
+    "eval",
+    "search"
+  ],
+  "_ground_truth": {
+    "label": "NO_SLICE",
+    "domain": "search",
+    "expected_verdict": "no-slice",
+    "expected_smells": [],
+    "expected_children_range": [
+      0,
+      0
+    ],
+    "notes": "Small, single-purpose, well-scoped. No smells should trigger. Skill must decline."
+  },
+  "_source": "Trivial polish ticket; representative of small-story sprint filler."
+}

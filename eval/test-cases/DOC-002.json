@@ -1,0 +1,25 @@
+{
+  "id": "DOC-002",
+  "title": "Download a single document as PDF",
+  "description": "Users want a quick way to grab a document as a PDF without going through the share menu. Add a 'Download PDF' option to the per-document menu (...). Export preserves the document's formatting using the existing PDF renderer.",
+  "acceptance_criteria": [
+    "Given a user with a document open, When they click 'Download PDF' from the document menu, Then the document is rendered to PDF and downloads with the filename matching the document title.",
+    "Given a user without download permission on a document, When they view the document menu, Then the Download PDF option is hidden."
+  ],
+  "labels": [
+    "eval",
+    "document"
+  ],
+  "_ground_truth": {
+    "label": "NO_SLICE",
+    "domain": "document",
+    "expected_verdict": "no-slice",
+    "expected_smells": [],
+    "expected_children_range": [
+      0,
+      0
+    ],
+    "notes": "Single verb, single persona, clean ACs, no smells. Skill must decline."
+  },
+  "_source": "Standard 'add export' minor feature; common across document SaaS."
+}

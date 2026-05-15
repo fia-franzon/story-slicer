@@ -1,0 +1,473 @@
+{
+  "overall": {
+    "total": 17,
+    "match": 14,
+    "accuracy": 0.8235294117647058
+  },
+  "by_label": {
+    "CONSIDER": {
+      "total": 4,
+      "match": 3,
+      "accuracy": 0.75
+    },
+    "NO_SLICE": {
+      "total": 3,
+      "match": 1,
+      "accuracy": 0.3333333333333333
+    },
+    "SLICE": {
+      "total": 8,
+      "match": 8,
+      "accuracy": 1.0
+    },
+    "HALT": {
+      "total": 2,
+      "match": 2,
+      "accuracy": 1.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "ADMIN-001",
+      "label": "CONSIDER",
+      "domain": "admin",
+      "expected_verdict": "consider",
+      "actual_verdict": "consider",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "mixed_crud"
+      ],
+      "smells_unexpected": [
+        "mixed_crud"
+      ],
+      "smells_missed": [],
+      "smell_evidence": {
+        "compound_gwt": "2 compound clause(s) found — AC #1 'when': 'they select multiple users via checkboxes and choose a new role from the bulk-action menu and confirm in the dialog'; AC #1 'then': 'all selected users have their role updated and the action is written to the audit log per user'",
+        "mixed_crud": "3 CRUD operations present: create, read, update"
+      }
+    },
+    {
+      "case_id": "ADMIN-002",
+      "label": "NO_SLICE",
+      "domain": "admin",
+      "expected_verdict": "no-slice",
+      "actual_verdict": "no-slice",
+      "verdict_match": true,
+      "expected_smells": [],
+      "actual_smells": [],
+      "smells_unexpected": [],
+      "smells_missed": [],
+      "smell_evidence": {}
+    },
+    {
+      "case_id": "API-001",
+      "label": "SLICE",
+      "domain": "api",
+      "expected_verdict": "slice",
+      "actual_verdict": "slice",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "multiple_personas",
+        "sprawling_description",
+        "too_many_acs"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "multiple_personas",
+        "too_many_acs"
+      ],
+      "smells_unexpected": [],
+      "smells_missed": [
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "multi_verb_title": "title contains a conjunction (and / or / + / /)",
+        "compound_gwt": "9 compound clause(s) found — AC #2 'then': 'a task is created, the response includes the new task, and a task.created webhook fires to subscribed endpoints'; AC #3 'when': 'they PATCH /tasks/:id or DELETE /tasks/:id' (+7 more)",
+        "too_many_acs": "8 acceptance criteria (threshold: 5)",
+        "multiple_personas": "2 distinct personas in Given clauses: admin, developer",
+        "mixed_crud": "4 CRUD operations present: create, delete, read, update"
+      }
+    },
+    {
+      "case_id": "API-002",
+      "label": "HALT",
+      "domain": "api",
+      "expected_verdict": "halt-fix-schema",
+      "actual_verdict": "halt-fix-schema",
+      "verdict_match": true,
+      "expected_smells": [],
+      "actual_smells": [],
+      "smells_unexpected": [],
+      "smells_missed": [],
+      "smell_evidence": {}
+    },
+    {
+      "case_id": "AUTH-001",
+      "label": "SLICE",
+      "domain": "auth",
+      "expected_verdict": "slice",
+      "actual_verdict": "slice",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "multi_verb_title",
+        "multiple_personas",
+        "sprawling_description",
+        "too_many_acs"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "multiple_personas",
+        "too_many_acs"
+      ],
+      "smells_unexpected": [
+        "mixed_crud"
+      ],
+      "smells_missed": [
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "multi_verb_title": "title contains a conjunction (and / or / + / /)",
+        "compound_gwt": "8 compound clause(s) found — AC #1 'when': \"they click 'Sign in with Google' or 'Sign in with Microsoft' or 'Sign in with Okta'\"; AC #1 'then': 'they are redirected to the IdP and on return they are logged in and a session_started audit event is written' (+6 more)",
+        "too_many_acs": "7 acceptance criteria (threshold: 5)",
+        "multiple_personas": "3 distinct personas in Given clauses: admin, successfully, user",
+        "mixed_crud": "3 CRUD operations present: create, read, update"
+      }
+    },
+    {
+      "case_id": "AUTH-002",
+      "label": "CONSIDER",
+      "domain": "auth",
+      "expected_verdict": "consider",
+      "actual_verdict": "consider",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "sprawling_description"
+      ],
+      "actual_smells": [
+        "compound_gwt"
+      ],
+      "smells_unexpected": [],
+      "smells_missed": [
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "compound_gwt": "3 compound clause(s) found — AC #2 'then': 'the Google identity is linked, they are logged in, and an sso_login_success audit event is written'; AC #3 'then': 'a new account is created with name, email, and photo populated from Google, they are logged in, and an account_created audit event is written' (+1 more)"
+      }
+    },
+    {
+      "case_id": "DOC-001",
+      "label": "SLICE",
+      "domain": "document",
+      "expected_verdict": "slice",
+      "actual_verdict": "slice",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "multiple_personas",
+        "sprawling_description",
+        "too_many_acs"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "multiple_personas",
+        "too_many_acs"
+      ],
+      "smells_unexpected": [],
+      "smells_missed": [
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "multi_verb_title": "title joins 2 action verbs (add, export) with a conjunction",
+        "compound_gwt": "12 compound clause(s) found — AC #1 'then': \"user B sees the change within 200ms with user A's cursor and presence indicator visible\"; AC #2 'then': 'the snapshot is saved with timestamp and author, and appears in the version history panel' (+10 more)",
+        "too_many_acs": "9 acceptance criteria (threshold: 5)",
+        "multiple_personas": "5 distinct personas in Given clauses: (edit, editor, owner, user, users",
+        "mixed_crud": "4 CRUD operations present: create, delete, read, update"
+      }
+    },
+    {
+      "case_id": "DOC-002",
+      "label": "NO_SLICE",
+      "domain": "document",
+      "expected_verdict": "no-slice",
+      "actual_verdict": "consider",
+      "verdict_match": false,
+      "expected_smells": [],
+      "actual_smells": [
+        "compound_gwt",
+        "multiple_personas"
+      ],
+      "smells_unexpected": [
+        "compound_gwt",
+        "multiple_personas"
+      ],
+      "smells_missed": [],
+      "smell_evidence": {
+        "compound_gwt": "1 compound clause(s) found — AC #1 'then': 'the document is rendered to PDF and downloads with the filename matching the document title'",
+        "multiple_personas": "2 distinct personas in Given clauses: permission, user"
+      }
+    },
+    {
+      "case_id": "IMPORT-001",
+      "label": "SLICE",
+      "domain": "data-import",
+      "expected_verdict": "slice",
+      "actual_verdict": "slice",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "sprawling_description",
+        "too_many_acs"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "multi_verb_title",
+        "too_many_acs"
+      ],
+      "smells_unexpected": [],
+      "smells_missed": [
+        "mixed_crud",
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "multi_verb_title": "title contains a conjunction (and / or / + / /)",
+        "compound_gwt": "11 compound clause(s) found — AC #1 'when': \"they click 'Import' and upload a CSV file under 10MB\"; AC #1 'then': 'the wizard parses the file and presents a column-mapping step with our contact fields and intelligent defaults' (+9 more)",
+        "too_many_acs": "8 acceptance criteria (threshold: 5)"
+      }
+    },
+    {
+      "case_id": "MOBILE-001",
+      "label": "SLICE",
+      "domain": "mobile",
+      "expected_verdict": "slice",
+      "actual_verdict": "slice",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "sprawling_description",
+        "too_many_acs"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "multiple_personas",
+        "too_many_acs"
+      ],
+      "smells_unexpected": [
+        "multiple_personas"
+      ],
+      "smells_missed": [
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "multi_verb_title": "title contains a conjunction (and / or / + / /)",
+        "compound_gwt": "6 compound clause(s) found — AC #1 'then': 'a persistent banner appears, per-screen icons indicate offline state, and the app continues to function for cached data'; AC #2 'when': 'they create, edit, or delete a record' (+4 more)",
+        "too_many_acs": "6 acceptance criteria (threshold: 5)",
+        "multiple_personas": "5 distinct personas in Given clauses: backgrounded, conflict, offline, reconnects, user",
+        "mixed_crud": "4 CRUD operations present: create, delete, read, update"
+      }
+    },
+    {
+      "case_id": "MOBILE-002",
+      "label": "HALT",
+      "domain": "mobile",
+      "expected_verdict": "halt-fix-schema",
+      "actual_verdict": "halt-fix-schema",
+      "verdict_match": true,
+      "expected_smells": [],
+      "actual_smells": [],
+      "smells_unexpected": [],
+      "smells_missed": [],
+      "smell_evidence": {}
+    },
+    {
+      "case_id": "NOTIF-001",
+      "label": "SLICE",
+      "domain": "notifications",
+      "expected_verdict": "slice",
+      "actual_verdict": "slice",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "multiple_personas",
+        "sprawling_description",
+        "too_many_acs"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "multiple_personas",
+        "too_many_acs"
+      ],
+      "smells_unexpected": [],
+      "smells_missed": [
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "compound_gwt": "4 compound clause(s) found — AC #1 'then': 'the preference is saved and a confirmation toast is shown'; AC #3 'then': 'push and SMS are suppressed and queued for delivery at the end of quiet hours' (+2 more)",
+        "too_many_acs": "6 acceptance criteria (threshold: 5)",
+        "multiple_personas": "3 distinct personas in Given clauses: admin, app, user"
+      }
+    },
+    {
+      "case_id": "NOTIF-002",
+      "label": "CONSIDER",
+      "domain": "notifications",
+      "expected_verdict": "consider",
+      "actual_verdict": "consider",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "sprawling_description"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "multiple_personas"
+      ],
+      "smells_unexpected": [
+        "multiple_personas"
+      ],
+      "smells_missed": [
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "compound_gwt": "4 compound clause(s) found — AC #1 'when': 'they enter subject, HTML body, select segments, and set a scheduled send time'; AC #1 'then': 'the announcement is queued and will dispatch at the scheduled time' (+2 more)",
+        "multiple_personas": "3 distinct personas in Given clauses: arrives, link, marketer"
+      }
+    },
+    {
+      "case_id": "ONBOARD-001",
+      "label": "SLICE",
+      "domain": "onboarding",
+      "expected_verdict": "slice",
+      "actual_verdict": "slice",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "multi_verb_title",
+        "sprawling_description",
+        "too_many_acs"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "multi_verb_title",
+        "multiple_personas",
+        "too_many_acs"
+      ],
+      "smells_unexpected": [
+        "multiple_personas"
+      ],
+      "smells_missed": [
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "multi_verb_title": "title contains a conjunction (and / or / + / /)",
+        "compound_gwt": "12 compound clause(s) found — AC #1 'when': 'they submit the signup form with email and password'; AC #1 'then': 'an account is created, a verification email is sent, and they land on the email-verification screen' (+10 more)",
+        "too_many_acs": "9 acceptance criteria (threshold: 5)",
+        "multiple_personas": "3 distinct personas in Given clauses: any, user, visitor"
+      }
+    },
+    {
+      "case_id": "REPORT-001",
+      "label": "SLICE",
+      "domain": "reporting",
+      "expected_verdict": "slice",
+      "actual_verdict": "slice",
+      "verdict_match": true,
+      "expected_smells": [
+        "compound_gwt",
+        "multi_verb_title",
+        "multiple_personas",
+        "sprawling_description",
+        "too_many_acs"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "multi_verb_title",
+        "multiple_personas",
+        "too_many_acs"
+      ],
+      "smells_unexpected": [],
+      "smells_missed": [
+        "sprawling_description"
+      ],
+      "smell_evidence": {
+        "multi_verb_title": "title contains a conjunction (and / or / + / /)",
+        "compound_gwt": "8 compound clause(s) found — AC #1 'then': \"the four KPIs and four charts render with their data scoped to the rep's own deals\"; AC #2 'then': 'they see aggregated data for their team and can drill down to individual reps' (+6 more)",
+        "too_many_acs": "7 acceptance criteria (threshold: 5)",
+        "multiple_personas": "5 distinct personas in Given clauses: executive, manager, rep, time, user"
+      }
+    },
+    {
+      "case_id": "REPORT-002",
+      "label": "CONSIDER",
+      "domain": "reporting",
+      "expected_verdict": "consider",
+      "actual_verdict": "slice",
+      "verdict_match": false,
+      "expected_smells": [
+        "compound_gwt"
+      ],
+      "actual_smells": [
+        "compound_gwt",
+        "multi_verb_title"
+      ],
+      "smells_unexpected": [
+        "multi_verb_title"
+      ],
+      "smells_missed": [],
+      "smell_evidence": {
+        "multi_verb_title": "title contains 2 distinct action verbs: add, export",
+        "compound_gwt": "1 compound clause(s) found — AC #1 'then': \"a CSV is generated containing all rows matching the filters and using the report's column ordering and currency/date formatting, and the file downloads with a name including the filter date range\""
+      }
+    },
+    {
+      "case_id": "SEARCH-001",
+      "label": "NO_SLICE",
+      "domain": "search",
+      "expected_verdict": "no-slice",
+      "actual_verdict": "slice",
+      "verdict_match": false,
+      "expected_smells": [],
+      "actual_smells": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "multiple_personas"
+      ],
+      "smells_unexpected": [
+        "compound_gwt",
+        "mixed_crud",
+        "multi_verb_title",
+        "multiple_personas"
+      ],
+      "smells_missed": [],
+      "smell_evidence": {
+        "multi_verb_title": "title contains 2 distinct action verbs: add, search",
+        "compound_gwt": "1 compound clause(s) found — AC #1 'then': 'the input is cleared and the search results refresh to show the unfiltered list'",
+        "multiple_personas": "2 distinct personas in Given clauses: bar, user",
+        "mixed_crud": "3 CRUD operations present: create, delete, read"
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "id": "IMPORT-001",
+  "title": "Build contact import wizard supporting CSV, vCard, Google, and LinkedIn",
+  "description": "Sales has been complaining for a year that they can't bulk-import contacts. Build an import wizard that accepts CSV, vCard, Google Contacts (OAuth), and LinkedIn export files. Wizard should let the user map source columns to our contact fields, preview the first 50 rows before committing, detect duplicates against existing contacts, let the user choose merge or skip per duplicate, validate phone and email formats, surface errors inline, and let the user undo the last import within 24 hours. Also write a per-import audit log so we can trace where contacts came from. CSV is the priority; vCard and Google are second; LinkedIn is optional. The wizard runs in a modal on the contacts page.",
+  "acceptance_criteria": [
+    "Given a user on the contacts page, When they click 'Import' and upload a CSV file under 10MB, Then the wizard parses the file and presents a column-mapping step with our contact fields and intelligent defaults.",
+    "Given a user at the column-mapping step, When they map source columns and click 'Preview', Then the first 50 mapped rows are shown with inline validation errors highlighted for invalid emails, invalid phone formats, and missing required fields.",
+    "Given a user previewing an import, When the system detects duplicates against existing contacts by email or phone, Then duplicates are listed and the user can choose merge, skip, or create-new per row or in bulk.",
+    "Given a user importing from vCard, When they upload a .vcf file, Then the wizard parses it and skips the column-mapping step since vCard fields are standardized.",
+    "Given a user importing from Google Contacts, When they authorize via OAuth, Then their contacts are fetched and presented for column mapping like CSV.",
+    "Given a user importing from LinkedIn, When they upload a LinkedIn export ZIP, Then the contacts CSV inside is auto-extracted and proceeds through the same mapping flow as CSV.",
+    "Given a user who completes an import, When the import finishes, Then a confirmation shows the counts (created, merged, skipped, errored), an audit log entry is written with the source and counts, and an 'Undo' link is shown for 24 hours.",
+    "Given a user who clicks 'Undo' within 24 hours of an import, When they confirm, Then all contacts created by that import are removed and any merged contacts are restored to their pre-merge state."
+  ],
+  "labels": [
+    "eval",
+    "data-import"
+  ],
+  "_ground_truth": {
+    "label": "SLICE",
+    "domain": "data-import",
+    "expected_verdict": "slice",
+    "expected_smells": [
+      "multi_verb_title",
+      "compound_gwt",
+      "too_many_acs",
+      "sprawling_description",
+      "mixed_crud"
+    ],
+    "expected_children_range": [
+      4,
+      6
+    ],
+    "notes": "Classic Data Variations split candidate (CSV / vCard / Google / LinkedIn)."
+  },
+  "_source": "Composite of Pipedrive, Intercom, and HubSpot import-wizard backlog templates."
+}

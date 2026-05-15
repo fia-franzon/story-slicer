@@ -1,0 +1,36 @@
+{
+  "id": "REPORT-001",
+  "title": "Build sales dashboard with KPIs, charts, filters, exports, and scheduled emails",
+  "description": "Sales leadership wants a dashboard. Build a real-time dashboard with KPIs at the top (revenue, deals won, pipeline, win rate), four primary charts (revenue trend, pipeline funnel, win/loss reasons, rep leaderboard), filters for date range, team, owner, and product. Users can export the current view to CSV or PDF. Sales managers can schedule the dashboard to be emailed weekly or monthly to a list of recipients. Role-based access: reps see only their own data, managers see their team, executives see all. Should be performant — queries against the warehouse, with a 5-minute cache layer.",
+  "acceptance_criteria": [
+    "Given a sales rep viewing the dashboard, When the page loads, Then the four KPIs and four charts render with their data scoped to the rep's own deals.",
+    "Given a sales manager, When they view the dashboard, Then they see aggregated data for their team and can drill down to individual reps.",
+    "Given an executive, When they view the dashboard, Then they see company-wide data with no filtering restrictions.",
+    "Given any user, When they change the date range, team, owner, or product filters, Then all KPIs and charts update within 2 seconds using the cache layer.",
+    "Given a user viewing the dashboard, When they click 'Export CSV' or 'Export PDF', Then the current filtered view is exported and downloaded.",
+    "Given a sales manager, When they configure a scheduled email, Then they pick frequency (weekly / monthly), recipients, and the schedule is saved.",
+    "Given a scheduled email reaches its send time, When the scheduler runs, Then a PDF snapshot of the dashboard with the manager's filters is generated and emailed to the recipient list."
+  ],
+  "labels": [
+    "eval",
+    "reporting"
+  ],
+  "_ground_truth": {
+    "label": "SLICE",
+    "domain": "reporting",
+    "expected_verdict": "slice",
+    "expected_smells": [
+      "multi_verb_title",
+      "compound_gwt",
+      "too_many_acs",
+      "multiple_personas",
+      "sprawling_description"
+    ],
+    "expected_children_range": [
+      4,
+      6
+    ],
+    "notes": "Persona-based split very natural (rep / manager / exec), plus separate slices for export and scheduled email."
+  },
+  "_source": "Drawn from Looker, Mode, and Salesforce dashboard PRDs; standard B2B sales-reporting pattern."
+}

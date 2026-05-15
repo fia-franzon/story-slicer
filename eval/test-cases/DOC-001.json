@@ -1,0 +1,39 @@
+{
+  "id": "DOC-001",
+  "title": "Add real-time collaboration, version history, comments, sharing, and export to docs",
+  "description": "Make our docs collaborative like Notion or Google Docs. Real-time multi-cursor editing with presence indicators, version history with named snapshots and rollback, inline comments and suggestions/redlines that authors can accept or reject, granular sharing permissions (view / comment / edit) at the document and folder level, link sharing with optional expiration and password, exports to PDF and Word, and a full audit log for compliance. Editors, viewers, and admins all use this surface. Operational transformation via the existing CRDT library.",
+  "acceptance_criteria": [
+    "Given two users editing the same document, When user A types, Then user B sees the change within 200ms with user A's cursor and presence indicator visible.",
+    "Given a user editing a document, When they create a named snapshot, Then the snapshot is saved with timestamp and author, and appears in the version history panel.",
+    "Given a user viewing history, When they click 'Restore' on a snapshot, Then the document content reverts to that snapshot and a new history entry is recorded.",
+    "Given a viewer-permissioned user, When they read a document, Then they cannot type or modify content but can view all comments.",
+    "Given a comment-permissioned user, When they highlight text and add a comment, Then the comment appears in the side panel for all collaborators and they can reply.",
+    "Given an editor reviewing suggestions, When they click 'Accept' or 'Reject' on a redline, Then the change is applied or discarded and the suggestion is removed.",
+    "Given a document owner, When they create a share link, Then they can set view/comment/edit permission, optional expiry date, and optional password, and the link is generated.",
+    "Given a user, When they request a PDF or Word export, Then the document is exported preserving formatting and downloads to their device.",
+    "Given any document action (edit, share, export, delete), When the action completes, Then it is written to the audit log with user, timestamp, and action details."
+  ],
+  "labels": [
+    "eval",
+    "document"
+  ],
+  "_ground_truth": {
+    "label": "SLICE",
+    "domain": "document",
+    "expected_verdict": "slice",
+    "expected_smells": [
+      "multi_verb_title",
+      "compound_gwt",
+      "too_many_acs",
+      "multiple_personas",
+      "sprawling_description",
+      "mixed_crud"
+    ],
+    "expected_children_range": [
+      5,
+      7
+    ],
+    "notes": "All six listed smells present. Natural slices: real-time editing, version history, comments, sharing, exports, audit log."
+  },
+  "_source": "Notion/Google Docs collaboration features as documented publicly."
+}

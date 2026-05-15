@@ -1,0 +1,29 @@
+{
+  "id": "NOTIF-002",
+  "title": "Send a one-time announcement email to all active users",
+  "description": "Marketing wants to send a feature-launch announcement to all active users. Build a one-time email send: subject line, HTML body (with template variables), recipient segmentation (active in last 30 days, by plan tier, by region), scheduled send time, opt-out link respected (don't send to users who unsubscribed from product announcements). Track opens and clicks. No A/B testing in this story; that's a follow-up.",
+  "acceptance_criteria": [
+    "Given a marketer in the announcement composer, When they enter subject, HTML body, select segments, and set a scheduled send time, Then the announcement is queued and will dispatch at the scheduled time.",
+    "Given the scheduled send time arrives, When the dispatcher runs, Then emails are sent only to users matching the selected segments and who have not unsubscribed from announcements.",
+    "Given a user opens an announcement email or clicks a link, When the event is captured, Then it is recorded for the campaign's open and click counts visible to the marketer."
+  ],
+  "labels": [
+    "eval",
+    "notifications"
+  ],
+  "_ground_truth": {
+    "label": "CONSIDER",
+    "domain": "notifications",
+    "expected_verdict": "consider",
+    "expected_smells": [
+      "compound_gwt",
+      "sprawling_description"
+    ],
+    "expected_children_range": [
+      1,
+      3
+    ],
+    "notes": "Description sprawls (segmentation, opt-out, tracking) but ACs are reasonably tight. Could be one story or split into compose+send / track."
+  },
+  "_source": "Standard email-marketing send feature; common in Customer.io, Braze, Mailchimp products."
+}

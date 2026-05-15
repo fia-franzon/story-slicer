@@ -1,0 +1,26 @@
+{
+  "id": "REPORT-002",
+  "title": "Add CSV export to the existing sales report",
+  "description": "We have a sales report with filters and pagination. Sales ops wants to download the currently-filtered view as a CSV. Should respect all active filters, include the same column ordering as the report, and use the same row formatting (currency, dates). Export should include all rows that match the filter, not just the current page. Performance: up to 50,000 rows should export in under 10 seconds.",
+  "acceptance_criteria": [
+    "Given a user viewing the sales report with filters applied, When they click 'Export CSV', Then a CSV is generated containing all rows matching the filters and using the report's column ordering and currency/date formatting, and the file downloads with a name including the filter date range."
+  ],
+  "labels": [
+    "eval",
+    "reporting"
+  ],
+  "_ground_truth": {
+    "label": "CONSIDER",
+    "domain": "reporting",
+    "expected_verdict": "consider",
+    "expected_smells": [
+      "compound_gwt"
+    ],
+    "expected_children_range": [
+      1,
+      2
+    ],
+    "notes": "Single AC but the Then is compound (multiple obligations). Skill should either accept as a small story or split the Then into separate slices."
+  },
+  "_source": "Generic export-feature pattern; reasonably common product request."
+}

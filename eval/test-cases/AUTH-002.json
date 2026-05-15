@@ -1,0 +1,30 @@
+{
+  "id": "AUTH-002",
+  "title": "Add Google SSO login",
+  "description": "Add Google as a sign-in option. The user clicks 'Sign in with Google', is redirected to Google's OAuth screen, grants access, and lands back in the app logged in. If they have an existing account with the same email, we merge — the Google identity gets linked. If not, we create a new account with the data from Google's profile (name, email, photo). Need to handle the edge case where a Google account has been deleted (rare, but possible if a user was offboarded from their old company): we should surface a clear error and let them sign in via password instead. Audit-log every SSO event for security.",
+  "acceptance_criteria": [
+    "Given a user on the login page, When they click 'Sign in with Google', Then they are redirected to Google's OAuth consent screen.",
+    "Given a user returning from Google with a successful auth, When their email matches an existing account, Then the Google identity is linked, they are logged in, and an sso_login_success audit event is written.",
+    "Given a user returning from Google with a successful auth, When no account exists for that email, Then a new account is created with name, email, and photo populated from Google, they are logged in, and an account_created audit event is written.",
+    "Given a user with a deleted Google account attempting to sign in, When Google returns an error, Then the user sees a friendly message explaining the situation and is offered password-based login as an alternative."
+  ],
+  "labels": [
+    "eval",
+    "auth"
+  ],
+  "_ground_truth": {
+    "label": "CONSIDER",
+    "domain": "auth",
+    "expected_verdict": "consider",
+    "expected_smells": [
+      "compound_gwt",
+      "sprawling_description"
+    ],
+    "expected_children_range": [
+      1,
+      3
+    ],
+    "notes": "Single verb, single persona, but the description sprawls and Then-clauses are compound. Skill should slice into 2-3 thin slices or recommend keeping as one and tightening the ACs."
+  },
+  "_source": "Standard SSO-integration ticket; appears in nearly every B2B SaaS backlog."
+}

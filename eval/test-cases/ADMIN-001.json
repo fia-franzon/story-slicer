@@ -1,0 +1,27 @@
+{
+  "id": "ADMIN-001",
+  "title": "Add bulk role change to user management",
+  "description": "Admins managing large workspaces want to change roles in bulk instead of clicking into each user. From the user list, they should be able to select multiple users, pick a target role from a dropdown, confirm the action, and have all selected users updated. Show a confirmation dialog summarizing how many users will be affected. Log each role change in the audit log.",
+  "acceptance_criteria": [
+    "Given an admin on the user list, When they select multiple users via checkboxes and choose a new role from the bulk-action menu and confirm in the dialog, Then all selected users have their role updated and the action is written to the audit log per user.",
+    "Given an admin canceling the confirmation dialog, When they click cancel, Then no changes are made."
+  ],
+  "labels": [
+    "eval",
+    "admin"
+  ],
+  "_ground_truth": {
+    "label": "CONSIDER",
+    "domain": "admin",
+    "expected_verdict": "consider",
+    "expected_smells": [
+      "compound_gwt"
+    ],
+    "expected_children_range": [
+      1,
+      2
+    ],
+    "notes": "Compound When clause (select + choose + confirm) and compound Then. Borderline: could be one story with tighter ACs, or split happy/unhappy."
+  },
+  "_source": "Common workspace-admin feature; appears in Asana, Linear, GitHub admin UIs."
+}

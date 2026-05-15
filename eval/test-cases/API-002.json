@@ -1,0 +1,28 @@
+{
+  "id": "API-002",
+  "title": "Refactor authentication middleware to use RS256 tokens",
+  "description": "Migrate the auth middleware from HS256 to RS256 JWTs. Tokens should be signed with our private key and verified with the public key. Existing HS256 tokens remain valid until their natural expiry (one week max). Expired or invalid tokens return 401. The middleware applies to all /api/v2/* routes.",
+  "acceptance_criteria": [
+    "Tokens issued by the auth service are signed using RS256 with the new private key.",
+    "Verification uses the public key published at /.well-known/jwks.json.",
+    "Expired tokens return HTTP 401.",
+    "Invalid signatures return HTTP 401.",
+    "HS256 tokens issued before the migration continue to verify until their exp claim."
+  ],
+  "labels": [
+    "eval",
+    "api"
+  ],
+  "_ground_truth": {
+    "label": "HALT",
+    "domain": "api",
+    "expected_verdict": "halt-fix-schema",
+    "expected_smells": [],
+    "expected_children_range": [
+      0,
+      0
+    ],
+    "notes": "Technical requirements, not user-facing Given/When/Then. Skill must halt."
+  },
+  "_source": "Real-world infra refactor ticket; ACs in 'shall' / 'should' form rather than G/W/T (common in security backlogs)."
+}

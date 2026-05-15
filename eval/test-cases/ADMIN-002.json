@@ -1,0 +1,24 @@
+{
+  "id": "ADMIN-002",
+  "title": "Show active user count on the admin dashboard",
+  "description": "Admins want at-a-glance visibility into how many users are active. Add a stat card to the admin dashboard showing the count of users who have signed in within the last 30 days. Refresh every 5 minutes via the existing dashboard refresh job.",
+  "acceptance_criteria": [
+    "Given an admin viewing the admin dashboard, When the page loads, Then the active-users stat card displays the count of users who have signed in within the last 30 days."
+  ],
+  "labels": [
+    "eval",
+    "admin"
+  ],
+  "_ground_truth": {
+    "label": "NO_SLICE",
+    "domain": "admin",
+    "expected_verdict": "no-slice",
+    "expected_smells": [],
+    "expected_children_range": [
+      0,
+      0
+    ],
+    "notes": "Trivial. Single AC, single persona, no compound clauses."
+  },
+  "_source": "Generic dashboard stat-card ticket."
+}

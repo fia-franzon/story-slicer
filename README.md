@@ -1,13 +1,10 @@
 # story-slicer
 
-Slices an oversized backlog ticket into smaller children that:
+A Claude skill that takes one oversized backlog ticket and produces N smaller children that ship vertical user value, preserve every parent acceptance criterion (proven by a coverage matrix), and surface what the model couldn't decide as Open Questions for engineering instead of papering them over.
 
-- preserve every parent acceptance criterion (proven by a coverage matrix),
-- pass schema validation (Given/When/Then for every AC),
-- ship vertical slices of user value (frontend + backend together),
-- and surface what the model couldn't decide as Open Questions for engineering instead of guessing.
+> Slice a too-big story without losing any acceptance criteria — and prove it.
 
-This repo packages the skill so it can be dropped into a Claude Code or Cowork plugin marketplace, or read directly by a Claude agent.
+---
 
 ## Why the project pivot
 
@@ -21,106 +18,346 @@ My original project failed because it was improperly scoped; despite being a PM,
 
 Anyways, a great project overall! Appreciate the sessions jamming and the learning. 
 
-## What's inside
+---
+
+## 1. Context, user, and problem
+
+**Who the user is.** Product managers, engineering leads, and agile coaches running backlog grooming or sprint refinement. The skill is built around Jira but the schema is portable to Linear, Asana, GitHub Issues, or any tracker with title / description / acceptance-criteria fields.
+
+**The workflow we're improving.** When a ticket arrives in grooming labeled *"this is too big,"* the team has to break it down. The good version of that breakdown:
+
+- preserves every acceptance criterion the team already agreed to,
+- produces children that each ship vertical user value (so they can land independently),
+- carries forward the test plan so QA isn't re-deriving it from scratch on every child,
+- and surfaces unresolved questions *before* engineering starts coding.
+
+Today this happens in a thirty-minute meeting with a whiteboard and Post-its, run by whoever's most patient or most senior in the room. Output quality is uneven, the slicing rubric is implicit, and *"did we miss anything?"* gets answered by vibes.
+
+**Why it matters.**
+
+- Oversized stories miss the sprint they're committed to and bleed into the next one — the most-cited reason in retros I've sat in on.
+- Without Given/When/Then discipline on ACs, frontend, backend, and QA each interpret requirements differently. The bugs surface at integration, after the work is "done."
+- Slicing is mentally expensive work that PMs procrastinate on, which is why groomings run long.
+- INVEST principles (Independent, Negotiable, Valuable, Estimable, Small, Testable) are well-known but rarely operationalized. Teams discuss them; they don't *enforce* them.
+- **AI without scaffolding makes this worse, not better.** Unscaffolded LLM slicing produces plausible-looking children that quietly drop ACs, split horizontally (FE-only, BE-only), or hide uncertainty behind confident prose. Those mistakes are harder to catch than a bad whiteboard session because the output *looks* right. This is the failure mode the skill is built to prevent.
+
+---
+
+## 2. Solution and design
+
+**What I built.** A skill that turns one too-big parent ticket into:
+
+1. A **smell report** that names *why* the ticket needs slicing — with cited evidence per smell, not just a verdict.
+2. **N validated child tickets** in Given/When/Then form with deterministic IDs (`<parent>-S01`, `S02`, …).
+3. A **coverage matrix** that proves no parent AC was dropped — every parent scenario maps to at least one child, or the build fails.
+4. **Open Questions** queued as parent-ticket comments so each gets its own discussion thread before engineering starts.
+5. **Alternative slices** the agent considered but rejected, surfaced as discussion fodder rather than hidden inside chain-of-thought.
+
+**How it works.** The agent handles writing and judgment. Two Python scripts do the deterministic work — schema validation, smell detection, coverage math, ID generation — because LLMs are unreliable at exactly those things.
+
+```
+parent ticket
+     │
+     ▼
+smell_check.py ──► JSON report: schema validity, 7 smells, verdict (slice|consider|no-slice|halt)
+     │
+     ▼
+agent picks split patterns from references/split-patterns.md
+agent drafts 2–8 child tickets, each with a `covers: [n, m]` list
+     │
+     ▼
+build_plan.py ──► validates every child, assigns IDs, builds coverage matrix,
+                   FAILS if any parent AC is uncovered
+     │
+     ▼
+slice-plan.md + children/*.md  (plus queued parent comments)
+     │
+     ▼
+agent presents plan → user approves → agent posts comments + creates children
+```
+
+**Key design choices.**
+
+| Decision | Why |
+|---|---|
+| **Agent writes prose; scripts enforce invariants.** | The "agent + tools" pattern. The model is great at synthesis; it's unreliable at deterministic checks like "did every AC find a home?" The scripts make those checks un-fudgeable. |
+| **Given/When/Then is mandatory.** | Vague ACs make slicing impossible (you can't preserve what you can't test). If the parent has free-form ACs, the skill halts and says so — it doesn't try to translate them itself. |
+| **Vertical slicing only.** | Horizontal splits (FE-only, BE-only) look parallelizable but never ship user value on their own. The skill surfaces them as comments for the team to discuss; it never drafts them as children. |
+| **Hard fail on uncovered parent ACs.** | The highest-stakes question in slicing is "did we drop anything?" `build_plan.py` exits non-zero if any parent AC index is missing from every child's `covers` list. |
+| **Deterministic IDs (parent + content hash).** | Reruns are idempotent — important so retries don't duplicate Jira issues. |
+| **Open Questions are first-class outputs.** | Without a sanctioned channel for "I don't know," the model fabricates plausible answers ("we'll use the existing inventory service") that derail teams after grooming. The skill makes uncertainty visible. |
+| **Caution path on no-slice.** | If the smell report says the ticket doesn't need splitting, the skill declines politely and names the smells it checked. It does not invent reasons to slice anyway. |
+
+**The seven splittability smells.**
+
+| Smell | Severity | Triggers when… |
+|---|---|---|
+| `multi_verb_title` | high | Title joins ≥2 action verbs with `and` / `or` / `+` / `/` |
+| `compound_gwt` | high | A When or Then clause contains `and` / `or` |
+| `too_many_acs` | high | More than 5 acceptance criteria |
+| `oversized_estimate` | high | Story-points estimate exceeds team threshold (default 8) |
+| `multiple_personas` | medium | ≥2 distinct personas in the Given clauses |
+| `sprawling_description` | medium | >200 words or >2 Markdown headers in the description |
+| `mixed_crud` | medium | ≥3 of Create / Read / Update / Delete operations present |
+
+Verdict math: ≥2 high (or 1 high + ≥2 medium) → `slice`. 1 high or ≥2 medium → `consider`. None → `no-slice`.
+
+**The six split-pattern catalog** (from `references/split-patterns.md`): Workflow Steps, Happy path, Unhappy path, Data Variations, CRUD, Persona, plus Spike + Build for high-uncertainty cases. The agent picks one or combines several; the chosen pattern is recorded on each child as `split_pattern`.
+
+---
+
+## 3. Evaluation and results
+
+### 3.1 What I evaluated
+
+> Does the scaffolding in the story-slicer skill produce **measurably better** outputs than an unscaffolded LLM call on the same backlog ticket?
+
+Full methodology, threats to validity, and pre-registered hypotheses live in [`eval/METHODOLOGY.md`](eval/METHODOLOGY.md). The short version follows.
+
+### 3.2 Baseline
+
+**Unscaffolded Claude** — same model, no scripts, no rubric, no schema enforcement. The prompt is the same for every case:
+
+> *Here is a backlog ticket. Decide whether it should be broken into smaller stories. If yes, produce 2–8 child stories, each with a title and acceptance criteria in Given/When/Then form, plus a brief rationale. If no, explain why.*
+
+This represents the realistic "PM asks a chatbot to help me slice this" baseline.
+
+### 3.3 Test-case design
+
+17 parent tickets across 4 ground-truth categories and 10 domains. Authored from public PM templates and anonymized real backlog examples, not by working backwards from the skill's smell rubric. Each case carries a pre-declared `_expected` block (predicted verdict, predicted smells, expected child count) and a `_source` field tracing where it came from.
+
+| Category | Count | What the skill should do |
+|---|---|---|
+| `SLICE` | 8 | Detect multiple smells, produce vertical-slice children |
+| `CONSIDER` | 4 | Detect 1 high or ≥2 medium smells; slice or surface the option |
+| `NO_SLICE` | 3 | Decline (caution path) — ticket is fine as-is |
+| `HALT` | 2 | Halt because ACs aren't in Given/When/Then form |
+
+**Domains covered:** authentication, data import, notifications, reporting, mobile, API integration, onboarding, document collaboration, admin tooling, search.
+
+Test-case files live in [`eval/test-cases/`](eval/test-cases/).
+
+### 3.4 Rubric
+
+Each pipeline's output (baseline and skill) is scored on five binary questions. Reasoning is recorded per question so a human can spot-check.
+
+| # | Question | What "yes" looks like |
+|---|---|---|
+| R1 | **Detection accuracy.** Did the output correctly decide whether the ticket needs slicing? | Output matches the ground-truth label. |
+| R2 | **Vertical slicing.** Are the children vertical slices, each delivering user-facing value end-to-end? | No FE-only, BE-only, or "wire up the API" children. Each could be merged and demoed independently. |
+| R3 | **Coverage.** Is every parent AC covered by at least one child? | Every Given/When/Then maps to at least one child AC. No silent drops. |
+| R4 | **Testable G/W/T per child.** Do all child ACs parse as Given/When/Then? | Every child has structured ACs a QA engineer could turn into test cases without further interpretation. |
+| R5 | **Uncertainty handling.** Did the output surface what it couldn't decide, vs. fabricating confident answers? | Explicit open questions or flagged assumptions when the parent has gaps. |
+
+R1, R3, R4 are checkable automatically. R2 and R5 are LLM-judge calls applied to both outputs blinded (the judge doesn't know which output came from which pipeline).
+
+### 3.5 Results so far — smell-check verdict accuracy
+
+The first measurement: how often does the skill's `smell_check.py` arrive at the ground-truth verdict label? This is the auto-graded portion of R1.
+
+**Overall: 14 / 17 = 82.4%**
+
+| Ground-truth label | n | Match | Accuracy |
+|---|---|---|---|
+| SLICE | 8 | 8 | **100%** |
+| HALT | 2 | 2 | **100%** |
+| CONSIDER | 4 | 3 | 75% |
+| NO_SLICE | 3 | 1 | **33%** |
+
+Full per-case table in [`eval/results/smell_check_summary.md`](eval/results/smell_check_summary.md).
+
+### 3.6 What the results show
+
+**Strengths.** The skill is *very* reliable on the cases that genuinely need slicing or halting:
+
+- **8 / 8 on SLICE cases** — the seven smells catch every multi-verb / multi-persona / sprawling parent in the test set.
+- **2 / 2 on HALT cases** — the G/W/T parser cleanly rejects free-form ACs and produces actionable error messages.
+
+These two categories are the high-stakes cases. Missing a SLICE costs an over-large story in the sprint; missing a HALT costs a slicer trying to operate on vague requirements. The skill handles both correctly on every case in the set.
+
+**The headline weakness: over-eagerness on small tickets.** The skill mislabeled **2 of 3 NO_SLICE cases** (33% accuracy). Two distinct causes:
+
+1. **The persona extractor has a bug** — `_persona_key()` in `smell_check.py` runs a head-noun heuristic that grabs the wrong noun when the Given clause has a trailing prepositional phrase or possessive. *"Given a user with text in the search bar"* → extracts `"bar"` as a persona. *"Given a user without download permission"* → extracts `"permission"`. This causes false `multiple_personas` triggers on small tickets. Documented as an open defect; not yet fixed.
+2. **Compound `Then` clauses appear in legitimately-small tickets.** A single AC that says *"the file downloads and respects column ordering and uses the current filter"* triggers `compound_gwt` — fairly. The compound clause is real. But on a single-AC, single-persona ticket, that one smell shouldn't escalate the whole thing to `slice`. The verdict math could weight differently.
+
+**The borderline case (CONSIDER, 3/4).** One CONSIDER case (REPORT-002) got escalated to SLICE because its title contains two action verbs (*"Add CSV export"* → `add` + `export`). Author judgment was CONSIDER; detector says SLICE. The disagreement is itself informative — it surfaces a tension between "the rubric is well-defined" and "human PMs would call this a small story."
+
+### 3.7 What's still in progress
+
+The baseline-vs-skill rubric comparison is still pending. To run it I need to:
+
+1. Produce the unscaffolded-Claude baseline output for each of the 12 sliceable cases (SLICE + CONSIDER).
+2. Produce the scaffolded-skill output for the same 12 cases.
+3. Apply the 5-question rubric to all 24 outputs, blinded.
+4. Aggregate per-criterion scores and report.
+
+Once that phase completes, this section will update with:
+
+- Per-criterion comparison (skill vs. baseline on each of R1–R5)
+- Win rate (per case, did the skill score strictly higher?)
+- Hypothesis check (each of H1–H6 from the methodology confirmed / partial / refuted)
+
+Tracking: see [`eval/results/STATUS.md`](eval/results/STATUS.md).
+
+### 3.8 Threats to validity
+
+Honest disclosure of where this eval falls short, so a reviewer can weight the conclusions accordingly. Full list in [`METHODOLOGY.md`](eval/METHODOLOGY.md) §7.
+
+- **The test-case author is the skill author.** Even with the *source-from-outside-the-rubric* rule and the `_source` field, some bias is unavoidable.
+- **Single LLM judge from the same model family** as the slicer. Mitigated by recording reasoning per rubric question for human spot-check.
+- **Single shot for both pipelines.** Variance across runs is real, especially for the baseline. n=17 is the floor.
+- **Cases skew B2B SaaS.** A consumer app or internal IT-ops backlog might behave differently.
+- **Baseline isn't optimized** — represents "average PM asking Claude" rather than the strongest possible unscaffolded approach.
+
+---
+
+## 4. Artifact snapshot
+
+### Sample input (illustrative test case)
+
+```yaml
+id: AUTH-001
+title: Add SSO, 2FA, password reset, and account lockout to login
+acceptance_criteria:
+  - Given a user on the login page, When they click 'Sign in with Google' or
+    'Sign in with Microsoft' or 'Sign in with Okta', Then they are redirected
+    to the IdP and on return they are logged in and a session_started audit
+    event is written.
+  - Given a user with 2FA enabled, When they enter a valid password, Then
+    they are prompted for a TOTP code and on success they are logged in, or
+    on failure they see an error and can retry up to 5 times.
+  - … (5 more ACs)
+labels: [eval, auth]
+```
+
+### Sample output: smell report
+
+```
+Verdict: slice
+Smells triggered: 5 of 7
+  ✓ multi_verb_title (high)     — title contains a conjunction
+  ✓ compound_gwt (high)         — 12 compound clauses across 7 ACs
+  ✓ too_many_acs (high)         — 7 acceptance criteria (threshold: 5)
+  ✓ multiple_personas (medium)  — 3 distinct personas: user, SSO user, admin
+  ✓ sprawling_description (med) — 168 words (under threshold, but headers exceed)
+  · oversized_estimate          — no estimate provided
+  · mixed_crud                  — under threshold
+```
+
+### Sample output: coverage matrix (from the demo run on a real Jira project)
+
+| # | Parent scenario (abridged) | S01 | S02 | S03 | S04 | S05 | S06 | S07 |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Cart updates real-time + persists | ✓ | | | | | | |
+| 2 | Checkout collects addresses + shipping | | ✓ | | | | | |
+| 3 | Sales tax recalculated via TaxJar | | ✓ | | | | | |
+| 4 | Discount codes validated and applied | | ✓ | | | | | |
+| 5 | Payment accepts cards, wallets, saved methods | | | ✓ | ✓ | | | |
+| 6 | On success: write order, decrement inventory, email | | | ✓ | | | | |
+| 7 | On payment failure: friendly error, retry | | | | | ✓ | | |
+| 8 | Admin can issue refund | | | | | | ✓ | |
+| 9 | Abandoned-cart emails at 1h and 24h | | | | | | | ✓ |
+| 10 | Responsive + WCAG 2.1 AA | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| 11 | Analytics events to Segment | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| — | _Split pattern_ | Workflow | Workflow | Happy path | Data Var. | Unhappy | Persona | Workflow |
+
+### Sample output: child ticket
+
+```markdown
+# SCRUM-57-S03: Build card payment happy path with order confirmation
+
+- Parent: SCRUM-57
+- Split pattern: Happy path
+- Covers parent ACs: 5, 6, 10, 11
+- Estimate: 8
+
+## Description
+The success path through payment, deliberately scoped to cards only so we can
+ship a working end-to-end purchase fast. Stripe Elements collects card details,
+the order is written to the orders DB, inventory decrements, SendGrid sends
+a confirmation email with order summary, and the shopper lands on a thank-you
+page with order number. Wallet methods live in S04. Failure handling in S05.
+
+## Acceptance criteria
+- Given a shopper who has entered valid card details via Stripe Elements,
+  When the payment succeeds, Then the order is written to the orders database,
+  inventory is decremented, a SendGrid confirmation email is sent with order
+  summary and tracking link, and the user lands on a thank-you page with the
+  order number.
+- Given a shopper on the payment screen, When they navigate the card form via
+  keyboard or screen reader, Then the form meets WCAG 2.1 AA contrast and
+  label requirements with inline validation.
+- Given a shopper completing a card payment, When the order is placed, Then
+  Segment receives payment_method_selected and order_placed events using the
+  standard ecommerce schema.
+```
+
+### Sample output: queued Open Questions
+
+The skill posts each as its own comment on the parent so each gets a dedicated thread:
+
+> **Stripe Customer setup for saved methods.** AC #5 mentions saved payment methods for logged-in members. That implies a Stripe Customer object per member. Is that infrastructure already live, or does S04 need to include the Stripe Customer integration?
+
+> **Inventory source of truth.** AC #6 says inventory is decremented; AC #8 says it's restocked on refund. What's the source of truth — the orders DB, a separate inventory service, or the warehouse system?
+
+> **Shipping carrier and rate source.** AC #2 requires shipping cost based on zip and weight, but the carrier (USPS / UPS / FedEx) and rate source aren't named. Spike candidate?
+
+> *(2 more)*
+
+### Demo Jira workspace
+
+A real end-to-end run lives in a Jira project: parent [SCRUM-57](https://fiafranzon.atlassian.net/browse/SCRUM-57) with seven child Stories ([SCRUM-58](https://fiafranzon.atlassian.net/browse/SCRUM-58) through [SCRUM-64](https://fiafranzon.atlassian.net/browse/SCRUM-64)) linked via *is implemented by*, plus the slicer's comment on the parent showing the smell report, coverage matrix, and queued Open Questions.
+
+### Screenshots / video
+
+_To add: screenshot of the parent ticket showing the slicer's comment and linked-children panel; screenshot of the coverage matrix as rendered in Jira; optional short clip walking through an end-to-end agent run._
+
+---
+
+## Repo contents
 
 ```
 story-slicer/
-├── README.md               ← this file
-└── story-slicer/           ← the skill itself
-    ├── SKILL.md            ← entry point: triggers, inputs, step-by-step instructions
-    ├── scripts/
-    │   ├── smell_check.py  ← validates G/W/T schema and runs 7 splittability heuristics
-    │   └── build_plan.py   ← validates child drafts, assigns IDs, computes coverage matrix
-    └── references/
-        ├── split-patterns.md   ← the 6-pattern catalog (Workflow Steps, Happy/Unhappy path,
-        │                          Data Variations, CRUD, Persona, Spike + Build)
-        └── ticket-schema.json  ← JSON schema for parent and child tickets
+├── README.md                            ← this file
+├── story-slicer/                        ← the skill itself
+│   ├── SKILL.md                         ← entry point: triggers, inputs, step-by-step
+│   ├── scripts/
+│   │   ├── smell_check.py               ← validates G/W/T schema, runs 7 heuristics
+│   │   └── build_plan.py                ← validates children, assigns IDs, computes coverage
+│   └── references/
+│       ├── split-patterns.md            ← 6-pattern catalog
+│       └── ticket-schema.json           ← JSON schema for parent and child tickets
+└── eval/                                ← evaluation set + harness + results
+    ├── METHODOLOGY.md                   ← full eval design, threats to validity, hypotheses
+    ├── test-cases/                      ← 17 parent tickets w/ ground-truth labels
+    ├── harness/
+    │   ├── generate_test_cases.py
+    │   └── run_smell_check_eval.py
+    └── results/
+        ├── smell_check_summary.md       ← verdict-accuracy table
+        └── smell_check_results.json     ← raw output for the aggregate script
 ```
-
-## How the skill works
-
-The agent does the writing and judgment. The two Python scripts do the deterministic work — detecting smells, parsing Given/When/Then, generating collision-free IDs, and computing coverage math — so the slice is auditable.
-
-A typical run:
-
-1. **Acquire the parent ticket** from a Jira-style MCP or a local JSON/Markdown file.
-2. **Run `scripts/smell_check.py`** to validate the schema and detect splittability smells. Verdict is `slice`, `consider`, or `no-slice`.
-3. **Pick split patterns** from `references/split-patterns.md` and draft 2–5 vertical-slice children. Each child must list which parent ACs it covers.
-4. **Run `scripts/build_plan.py`** to validate every child, assign deterministic IDs (`<parent>-S01`, `S02`, …), compute the coverage matrix, and fail loudly if any parent AC has no home.
-5. **Present the plan, comments, and child drafts** to the user; wait for approval before posting comments or creating child tickets.
-
-See `story-slicer/SKILL.md` for the full instructions the agent follows.
 
 ## Quick start (CLI)
 
-The scripts are usable standalone — drop a parent ticket JSON in and run:
-
 ```bash
+# Detect smells on a parent ticket
 python3 story-slicer/scripts/smell_check.py --input parent.json
-```
 
-Sample output (truncated):
-
-```json
-{
-  "schema_valid": true,
-  "verdict": "slice",
-  "smells": [
-    {"name": "multi_verb_title", "triggered": true, "severity": "high", "evidence": "..."},
-    {"name": "compound_gwt",     "triggered": true, "severity": "high", "evidence": "..."},
-    ...
-  ]
-}
-```
-
-Then build the plan:
-
-```bash
+# Build the full slice plan from a working doc (parent + child drafts)
 python3 story-slicer/scripts/build_plan.py --input working.json --out slice-output/
 ```
 
-Where `working.json` is the parent plus your child drafts. The script writes `slice-output/slice-plan.md` (full report with coverage matrix and queued parent comments) and one Markdown file per child in `slice-output/children/`.
+## Reproducing the eval
 
-## Input format
+```bash
+cd eval
+python3 harness/generate_test_cases.py        # regenerates eval/test-cases/
+python3 harness/run_smell_check_eval.py       # produces results/smell_check_summary.md
+# (baseline + skill output generation and judging — in progress)
+```
 
-Parent tickets conform to the schema in `story-slicer/references/ticket-schema.json`. The required fields are `title`, `description`, and `acceptance_criteria` (each AC must parse as `Given … When … Then …`). Optional fields: `id`, `labels`, `estimate`, `parent_id`.
-
-Inline (`Given X, When Y, Then Z`) and multi-line forms are both accepted.
-
-## The seven splittability smells
-
-| Smell | Severity | Trigger |
-|---|---|---|
-| `multi_verb_title` | high | Title joins multiple action verbs with `and` / `or` / `+` / `/` |
-| `compound_gwt` | high | A When or Then clause contains `and` / `or` |
-| `too_many_acs` | high | More than 5 acceptance criteria |
-| `oversized_estimate` | high | Story-points estimate exceeds the team threshold (default 8) |
-| `multiple_personas` | medium | 2+ distinct personas in the Given clauses |
-| `sprawling_description` | medium | More than 200 words or 2 Markdown headers in the description |
-| `mixed_crud` | medium | 3+ of Create / Read / Update / Delete operations present |
-
-Verdict math: ≥2 high (or 1 high + ≥2 medium) → `slice`. 1 high or ≥2 medium → `consider`. None → `no-slice` (caution path: the skill declines and names what it checked).
-
-## Vertical slicing only
-
-The skill never drafts a horizontal (frontend / backend, service-A / service-B) split as a child. Each child must ship user-facing value end-to-end. Horizontal alternatives are surfaced as parent-ticket comments for discussion, not acted on.
-
-## Hard validation rules
-
-`build_plan.py` exits non-zero on any of:
-
-- the parent fails schema validation (an AC isn't in G/W/T form),
-- a child fails schema validation,
-- any parent AC index is uncovered by every child,
-- a child references an out-of-range parent AC index.
-
-The model must fix the drafts and re-run — these errors are never papered over.
-
-## Installing as a Claude Code / Cowork skill
-
-Copy the inner `story-slicer/` directory into your skills folder. The skill is auto-discovered by its `SKILL.md` front-matter description.
-
-For Claude Code:
+## Installing as a Claude skill
 
 ```bash
 mkdir -p ~/.claude/skills

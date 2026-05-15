@@ -1,0 +1,27 @@
+{
+  "id": "MOBILE-002",
+  "title": "Improve mobile app launch time",
+  "description": "The app's cold-start time is too slow. We need to bring it under 2 seconds on the iPhone 13 baseline device. Strategies likely include lazy-loading non-essential modules, removing the synchronous init for the analytics SDK, deferring auth-token refresh until first network call, and adding a native splash screen to mask init time.",
+  "acceptance_criteria": [
+    "App launches in under 2 seconds on iPhone 13 from cold start.",
+    "Native splash screen displays during cold start.",
+    "Analytics SDK initialization does not block the main thread.",
+    "Auth token refresh does not run during launch unless needed for the first network request."
+  ],
+  "labels": [
+    "eval",
+    "mobile"
+  ],
+  "_ground_truth": {
+    "label": "HALT",
+    "domain": "mobile",
+    "expected_verdict": "halt-fix-schema",
+    "expected_smells": [],
+    "expected_children_range": [
+      0,
+      0
+    ],
+    "notes": "ACs are free-form imperative statements, not Given/When/Then. Skill must halt and ask for AC review."
+  },
+  "_source": "Common perf-optimization ticket; ACs deliberately not converted to G/W/T form (realistic)."
+}

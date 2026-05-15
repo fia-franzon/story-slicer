@@ -1,0 +1,34 @@
+{
+  "id": "NOTIF-001",
+  "title": "Build notification preferences with per-event opt-in across channels",
+  "description": "End users want fine-grained control. Build a preferences screen where users pick per-event delivery (email, push, in-app, SMS) and set quiet hours. Admins need an override that forces critical notifications (security alerts, billing failures) regardless of preferences. Default new users to a sensible preset. Push needs APNs and FCM; SMS is via Twilio; email is via SendGrid. The notification service already exists — we're just adding the preferences layer plus the routing logic to respect them. Should also expose preferences via API for the mobile apps.",
+  "acceptance_criteria": [
+    "Given a user on the preferences screen, When they toggle a channel for an event type, Then the preference is saved and a confirmation toast is shown.",
+    "Given a user with email disabled for an event, When that event fires, Then no email is sent but the in-app notification still appears if in-app is enabled.",
+    "Given a user with quiet hours set, When an event fires inside those hours, Then push and SMS are suppressed and queued for delivery at the end of quiet hours.",
+    "Given an admin who marks a notification type as critical, When that notification fires, Then it bypasses user preferences and quiet hours and is delivered via all enabled channels.",
+    "Given a new user signing up, When their account is created, Then default preferences are populated using the platform preset.",
+    "Given the mobile app, When it fetches a user's preferences via the API, Then it receives the current preferences and can update them via PUT."
+  ],
+  "labels": [
+    "eval",
+    "notifications"
+  ],
+  "_ground_truth": {
+    "label": "SLICE",
+    "domain": "notifications",
+    "expected_verdict": "slice",
+    "expected_smells": [
+      "compound_gwt",
+      "too_many_acs",
+      "multiple_personas",
+      "sprawling_description"
+    ],
+    "expected_children_range": [
+      3,
+      5
+    ],
+    "notes": "Two personas (user, admin), API surface + UI, four channels. Persona × workflow split candidate."
+  },
+  "_source": "Generic SaaS notifications-preferences PRD; commonly seen in Linear, Asana, Slack templates."
+}
