@@ -310,7 +310,14 @@ A real end-to-end run lives in a Jira project: parent [SCRUM-57](https://fiafran
 
 ### Screenshots / video
 
-_To add: screenshot of the parent ticket showing the slicer's comment and linked-children panel; screenshot of the coverage matrix as rendered in Jira; optional short clip walking through an end-to-end agent run._
+<img width="633" height="765" alt="image" src="https://github.com/user-attachments/assets/93248519-aa4e-42bb-b4fa-5aefab22391f" />
+
+<img width="640" height="232" alt="image" src="https://github.com/user-attachments/assets/9b90394f-ac8f-4fad-bda9-97e2eed755f3" />
+
+<img width="570" height="178" alt="image" src="https://github.com/user-attachments/assets/64b7df71-ebf3-42ef-af35-2667103ec2a6" />
+
+<img width="573" height="460" alt="image" src="https://github.com/user-attachments/assets/d00557d2-509a-4fc2-8207-23dec6dcfd97" />
+
 
 ---
 
